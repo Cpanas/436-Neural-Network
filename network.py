@@ -30,9 +30,11 @@ def visual_test_set(X, Y, layers, iterations, time):
     print("Test Accuracy: ", util.get_accuracy(util.get_predictions(A[len(A) - 1]), Y))
 
     plt.show(block=False)
+    labels = list(main.label_hash.keys())
+
     for i in range(0, iterations):
-        print("Predicted: {} Actual: {}".format(util.get_predictions(A[len(A) - 1])[i], Y[i]))
-        util.rebuild_image(X.T[i], 28, time)
+        print("Predicted: {} Actual: {}".format(labels[util.get_predictions(A[len(A) - 1])[i]], labels[Y[i]]))
+        util.rebuild_image(X.T[i], time)
     plt.close()
 
 def forward(layers, X):
@@ -50,7 +52,7 @@ def forward(layers, X):
         A.append(act.get_activation(layers[i].activation, Z[i])) 
 
     #output
-    Z.append(layers[1].weight.dot(A[top - 1]) + layers[top].bias)
+    Z.append(layers[top].weight.dot(A[top - 1]) + layers[top].bias)
     A.append(act.get_activation(layers[top].activation, Z[top]))
 
     return Z, A

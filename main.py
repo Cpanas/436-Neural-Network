@@ -6,18 +6,58 @@ import activations as acti
 import network
 import Layer
 
+
+#hashmap for directories - allows non-numerical labels
+label_hash = {}
+
+#####################################################
+#####################################################
+#####################################################
+#####################################################
+
 #Used to toggle the progress bar
 progress_bar = True
 
+#Used to toggle on if it'll visualize the test data
+visualize = True
+plots_to_show = 5 #plots it'll visualize out of training data
+time_per_plot = 3 #seconds between plot visuals (set to -1 for manual)
+
+#DIRECTORIES
+dir = os.getcwd() + "/_data/emnist" #directory for test/train data
+
+#DEFAULT VALUES
+samples = 100 #samples to take out of train_dir
+test_samples = 100 #samples to take out of test_dir
+iterations = 500 #iterations for training
+growth = 0.100 #influence backpropogation has on weights/biases
+split = 0.8 #values going towards training data
+
+#ACTIVATION FUNCTIONS
+activations = ["relu", "softmax"] #activation functions
+nodes = [-1, -1] #first and last node counts are defined by the input/output space
+#All values inbetween decide the neuron count for its respective layer
+#i.e., nodes[1] = 24 means layer 2 has 24 neurons
+
+#####################################################
+#####################################################
+#####################################################
+#####################################################
+
+
 def main():
-    train_dir = os.getcwd() + "/_data/train"
-    test_dir = os.getcwd() + "/_data/test"
-    
-    #DEFAULT VALUES!
-    samples = 100
-    test_samples = 100
-    iterations = 500
-    growth = 0.100
+    #Scope
+    global nodes
+    global growth
+    global iterations
+    global test_samples
+    global samples
+    global dir
+    global split
+    global time_per_plot
+    global plots_to_show
+    global visualize
+    global label_hash
 
     if len(sys.argv) == 2:
         if sys.argv[1].upper() == "HELP":
@@ -28,8 +68,8 @@ def main():
             print("Input 'DATA' for information on test/training data")
             return
         if sys.argv[1].upper() == "DATA":
-            train_sub, train, test_sub, test = util.data_request(train_dir, test_dir)
-            print("{} directories in Training with {} files \n{} directories in Testing with {} files".format(train_sub, train, test_sub, test))
+            sub, count = util.data_request(dir)
+            print("{} directories with {} files".format(sub, count))
             return
 
     #parse cmd args
@@ -41,23 +81,18 @@ def main():
             growth = min(abs(float(sys.argv[3])), 1)
     if len(sys.argv) > 4:
             test_samples = abs(int(sys.argv[4]))
-
-    #####################################
-    #I don't recommend messing with this unless you are feeling experimental
-    activations = ["relu", "softmax"]
-    #first and last nodes are defined by the input
-    nodes = [-1, -1]
-    #####################################
+    else:
+        test_samples = samples
 
     #get indexes for activation functions
     funcs = []
     for i in range(0, len(activations)):
         funcs.append(acti.get_layer_from_str(activations[i]))
 
-    X_train, Y_train = util.build_data(train_dir, samples)
+    X_train, Y_train = util.build_data(dir, samples, split, True)
     X_train, Y_train = util.unison_shuffled_copies(X_train, Y_train)
 
-    X_test, Y_test = util.build_data(test_dir, test_samples)
+    X_test, Y_test = util.build_data(dir, test_samples, split, False)
     X_test, Y_test = util.unison_shuffled_copies(X_test, Y_test)
 
     nodes[0] = len(X_test[0]) #input space
@@ -82,13 +117,12 @@ def main():
     #TESTING
     ########################################
 
-    #used to print test accuracy
-    network.test_set(X_test, Y_test, trained_layers)
-
-    #used to print test accuracy with visuals + shows estimated number (this can take a tad longer)
-    #plots_to_show = 10
-    #time_per_plot = 3
-    #network.visual_test_set(X_test, Y_test, trained_layers, plots_to_show, time_per_plot)
+    if visualize == True:
+        #used to print test accuracy with visuals + shows estimated number (this can take a tad longer)
+        network.visual_test_set(X_test, Y_test, trained_layers, plots_to_show, time_per_plot)
+    else:
+        #used to print test accuracy
+        network.test_set(X_test, Y_test, trained_layers)
 
 def build_params(funcs, nodes):
     layers = []
