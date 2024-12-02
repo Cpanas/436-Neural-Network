@@ -19,12 +19,15 @@ label_hash = {}
 progress_bar = True
 
 #Used to toggle on if it'll visualize the test data
-visualize = True
+visualize = False
 plots_to_show = 5 #plots it'll visualize out of training data
 time_per_plot = 3 #seconds between plot visuals (set to -1 for manual)
 
+plot = True
+capture_rate = 50
+
 #DIRECTORIES
-dir = os.getcwd() + "/_data/emnist" #directory for test/train data
+dir = os.getcwd() + "/_data/mnist" #directory for test/train data
 
 #DEFAULT VALUES
 samples = 100 #samples to take out of train_dir
@@ -111,18 +114,20 @@ def main():
     ########################################
     #TRAINING
     ########################################
-    trained_layers = network.gradient_descent(X_train, Y_train, nn_layers, iterations, growth)
+    trained_layers, captures = network.gradient_descent(X_train, Y_train, nn_layers, iterations, growth, capture_rate)
 
     ########################################
     #TESTING
     ########################################
 
+    network.test_set(X_test, Y_test, trained_layers)
+
     if visualize == True:
         #used to print test accuracy with visuals + shows estimated number (this can take a tad longer)
         network.visual_test_set(X_test, Y_test, trained_layers, plots_to_show, time_per_plot)
-    else:
-        #used to print test accuracy
-        network.test_set(X_test, Y_test, trained_layers)
+    if plot == True:
+        network.plot_test_set(X_test, Y_test, trained_layers, captures, capture_rate)
+        
 
 def build_params(funcs, nodes):
     layers = []
